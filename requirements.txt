@@ -1,3 +1,5 @@
+findspark==2.0.1
+findspark
 altair==4.2.2
 attrs==23.1.0
 backports.zoneinfo==0.2.1
