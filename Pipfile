@@ -8,6 +8,7 @@ streamlit = "*"
 pyspark = "*"
 pandas = "*"
 beautifulsoup4 = "*"
+findspark = "*"
 
 [dev-packages]
 
