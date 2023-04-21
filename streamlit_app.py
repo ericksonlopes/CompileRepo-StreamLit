@@ -1,6 +1,7 @@
 import streamlit as st
-from helpers import GitHub
 from pyspark.sql import SparkSession
+
+from helpers import GitHub
 
 spark = SparkSession.builder.appName("CompileRepo").getOrCreate()
 
@@ -16,9 +17,11 @@ github = GitHub()
 github.generate_tree(repositorio)
 
 st.text("Arquivos: ")
-spark.createDataFrame(github.files).show()
-# st.dataframe(df_files)
-#
-# st.text("Diretórios: ")
-# df_directory = pd.DataFrame(github.directories)
-# st.dataframe(df_directory)
+rdd_files = spark.sparkContext.parallelize(github.files)
+df_files = rdd_files.toDF()
+st.dataframe(df_files)
+
+st.text("Diretórios: ")
+rdd_directory = spark.sparkContext.parallelize(github.directories)
+df_directory = rdd_directory.toDF()
+st.dataframe(df_directory)
