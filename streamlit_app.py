@@ -6,10 +6,7 @@ from helpers import GitHub
 findspark.init()
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder \
-    .appName("MyApp") \
-    .config("spark.some.config.option", "some-value") \
-    .getOrCreate()
+spark = SparkSession.builder.appName("Gerador de árvore de diretórios").getOrCreate()
 
 st.title("Gerador de árvore de diretórios")
 
