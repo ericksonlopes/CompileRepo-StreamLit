@@ -51,3 +51,6 @@ urllib3==1.26.15 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 
 validators==0.20.0 ; python_version >= '3.4'
 watchdog==3.0.0 ; platform_system != 'Darwin'
 zipp==3.15.0 ; python_version >= '3.7'
+
+requests~=2.28.2
+beautifulsoup4~=4.12.2
