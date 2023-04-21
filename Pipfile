@@ -5,10 +5,9 @@ name = "pypi"
 
 [packages]
 streamlit = "*"
-pyspark = "*"
 pandas = "*"
 beautifulsoup4 = "*"
-findspark = "*"
+requests = "*"
 
 [dev-packages]
 
