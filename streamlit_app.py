@@ -1,9 +1,15 @@
+import findspark
 import streamlit as st
-from pyspark.sql import SparkSession
 
 from helpers import GitHub
 
-spark = SparkSession.builder.appName("CompileRepo").getOrCreate()
+findspark.init()
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder \
+    .appName("MyApp") \
+    .config("spark.some.config.option", "some-value") \
+    .getOrCreate()
 
 st.title("Gerador de árvore de diretórios")
 
