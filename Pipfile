@@ -8,6 +8,8 @@ streamlit = "*"
 pandas = "*"
 beautifulsoup4 = "*"
 requests = "*"
+matplotlib = "*"
+plotly = "*"
 
 [dev-packages]
 

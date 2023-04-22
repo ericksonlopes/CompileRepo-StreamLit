@@ -18,7 +18,7 @@ class FileModel(PropertyModel):
     type: str = "File"
     size: str = None
     lines: int = None
-    # extension: str = None
+    extension: str = None
 
 
 @dataclass
@@ -38,6 +38,16 @@ class GitHub:
     @property
     def directories(self) -> List[DirectoryModel]:
         return self.__directories
+
+    @staticmethod
+    def convert_to_kilobytes(size, unit):
+        unit = unit.upper()
+        units = {"B": 1, "BYTES": 1,
+                 "KB": 1024, "MB": 1024 ** 2, "GB": 1024 ** 3, "TB": 1024 ** 4}
+        if unit in units:
+            return size * units[unit] / 1024
+        else:
+            raise ValueError("Invalid unit")
 
     def generate_tree(self, url, nivel=0):
         req = requests.get(url)
@@ -63,21 +73,22 @@ class GitHub:
 
                         soup_file = BeautifulSoup(req_file.text, "html.parser")
 
-                        # Recebe o texto
                         file_info: str = soup_file.find(class_='file-info').text
 
-                        # Limpa os dados
                         file_cute: List[str] = file_info.strip().replace('\n', '').split()
 
+                        size = self.convert_to_kilobytes(float(file_cute[-2]), file_cute[-1].upper())
+
                         st.text("|   " * nivel + "|-- " + name_ +
-                                f" ({int(file_cute[1])} lines, {file_cute[-2]} {file_cute[-1]})")
+                                f" ({int(file_cute[1])} lines, {size:.2f} KB)")
 
                         self.__files.append(FileModel(
                             name=name_,
-                            link=link_,
-                            path=link_,
+                            link=link_.replace("https://github.com", ""),
+                            path=link_.split('blob')[-1].replace('/', '\\' if '\\' in link_ else '/'),
                             lines=int(file_cute[1]),
-                            size=f"{file_cute[-2]} {file_cute[-1]}"))
+                            size=f"{size:.2f} KB",
+                            extension=name_.split('.')[-1]))
 
             except Exception as e:
                 print(e)
