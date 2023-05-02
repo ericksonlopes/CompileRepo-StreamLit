@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import List
-
+import matplotlib.pyplot as plt
+import networkx as nx
+import requests
+from bs4 import BeautifulSoup
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
@@ -49,27 +52,43 @@ class GitHub:
         else:
             raise ValueError("Invalid unit")
 
-    def generate_tree(self, url, nivel=0):
+    def build_graph(self, url, graph, progress_bar):
         req = requests.get(url)
-
         soup = BeautifulSoup(req.text, "html.parser")
+        list_items = soup.find(class_="js-details-container Details")
 
-        list_itens = soup.find(class_="js-details-container Details")
+        num_rows = len(list_items.find_all(role='row')[1:])
 
-        for row in list_itens.find_all(role='row')[1:]:
-            name_ = row.text.split()[0].replace('\n', '')
+        for i, row in enumerate(list_items.find_all(role='row')[1:]):
+
+            name = row.text.split()[0].replace('\n', '')
+
+            if name == ".":
+                continue
+
             try:
                 type_ = row.svg['aria-label']
-                link_ = 'https://github.com' + str(row.span.a['href'])
+                link = 'https://github.com' + str(row.span.a['href'])
+                node = link.split("/")[-1]
 
-                if name_ != "Go to parent directory":
+                if name != "Go to parent directory":
                     if 'Directory' == type_:
-                        self.__directories.append(DirectoryModel(name_, link_, name_))
-                        st.text("|   " * nivel + "+-- " + name_)
-                        self.generate_tree(link_, nivel + 1)
+                        self.__directories.append(DirectoryModel(name, link, name))
+
+                        graph.add_node(node)
+                        graph.add_edge(link.split("/")[-2], node)
+
+                        text = f"Processando {name} ({i + 1}/{num_rows})"
+                        # Atualiza a barra de progresso a cada iteração do loop
+                        progress_bar.progress((i + 1) / num_rows, text=text)
+
+                        graph = self.build_graph(link, graph, progress_bar)
 
                     else:
-                        req_file = requests.get(link_.replace('blob', 'blame'))
+                        graph.add_node(node)
+                        graph.add_edge(link.split("/")[-2], node)
+
+                        req_file = requests.get(link.replace('blob', 'blame'))
 
                         soup_file = BeautifulSoup(req_file.text, "html.parser")
 
@@ -79,16 +98,16 @@ class GitHub:
 
                         size = self.convert_to_kilobytes(float(file_cute[-2]), file_cute[-1].upper())
 
-                        st.text("|   " * nivel + "|-- " + name_ +
-                                f" ({int(file_cute[1])} lines, {size:.2f} KB)")
-
                         self.__files.append(FileModel(
-                            name=name_,
-                            link=link_.replace("https://github.com", ""),
-                            path=link_.split('blob')[-1].replace('/', '\\' if '\\' in link_ else '/'),
+                            name=name,
+                            link=link.replace("https://github.com", ""),
+                            path=link.split('blob')[-1].replace('/', '\\' if '\\' in link else '/'),
                             lines=int(file_cute[1]),
                             size=f"{size:.2f} KB",
-                            extension=name_.split('.')[-1]))
+                            extension=name.split('.')[-1]))
 
             except Exception as e:
-                print(e)
+                print(e, name)
+
+        progress_bar.progress(1.0, text="Concluído!")
+        return graph
